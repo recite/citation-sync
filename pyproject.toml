@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build_meta"
+
+[project]
+name = "citation-sync"
+version = "1.0.0"
+description = "GitHub Action for synchronizing CITATION.cff with pyproject.toml metadata"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Citation Sync Contributors", email = "contributors@citation-sync.dev"}
+]
+maintainers = [
+    {name = "Citation Sync Maintainers", email = "maintainers@citation-sync.dev"}
+]
+keywords = [
+    "github-actions",
+    "citation",
+    "cff",
+    "pyproject-toml",
+    "pep-621",
+    "metadata",
+    "automation",
+    "python"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Documentation",
+    "Topic :: Scientific/Engineering"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "tomli>=2.0.0;python_version<'3.11'",
+    "PyYAML>=6.0",
+    "jsonschema>=4.17.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "isort",
+    "flake8"
+]
+
+[project.urls]
+Homepage = "https://github.com/soodoku/citation-sync"
+Repository = "https://github.com/soodoku/citation-sync"
+Issues = "https://github.com/soodoku/citation-sync/issues"
+Documentation = "https://github.com/soodoku/citation-sync#readme"
+
+[project.scripts]
+citation-sync = "src.sync_citation:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

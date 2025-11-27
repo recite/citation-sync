@@ -1,0 +1,27 @@
+name: Sync CITATION.cff on Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-citation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Sync CITATION.cff with pyproject.toml
+        uses: your-username/citation-sync@v1
+        with:
+          commit: true
+          commit-message: "docs: update CITATION.cff for release ${{ github.ref_name }}"
+          custom-fields: |
+            {
+              "repository-code": "${{ github.server_url }}/${{ github.repository }}",
+              "type": "software"
+            }

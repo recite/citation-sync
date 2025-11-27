@@ -1,0 +1,90 @@
+name: 'Sync CITATION.cff with pyproject.toml'
+description: 'Automatically synchronize CITATION.cff file with PEP 621 metadata from pyproject.toml'
+author: 'citation-sync'
+
+branding:
+  icon: 'file-text'
+  color: 'blue'
+
+inputs:
+  pyproject-path:
+    description: 'Path to pyproject.toml file'
+    required: false
+    default: './pyproject.toml'
+  
+  citation-path:
+    description: 'Path to CITATION.cff file'
+    required: false
+    default: './CITATION.cff'
+  
+  commit:
+    description: 'Auto-commit changes if CITATION.cff is updated'
+    required: false
+    default: 'false'
+  
+  commit-message:
+    description: 'Commit message when auto-committing changes'
+    required: false
+    default: 'chore: update CITATION.cff from pyproject.toml'
+  
+  custom-fields:
+    description: 'JSON object for additional CFF fields (e.g., {"doi": "10.5281/zenodo.123456", "repository-code": "https://github.com/user/repo"})'
+    required: false
+    default: '{}'
+  
+  validate-only:
+    description: 'Only validate existing CITATION.cff without updating it'
+    required: false
+    default: 'false'
+  
+  force-update:
+    description: 'Force update even if no changes detected'
+    required: false
+    default: 'false'
+
+outputs:
+  updated:
+    description: 'Whether CITATION.cff was updated (true/false)'
+  
+  changes-detected:
+    description: 'Whether changes were detected between pyproject.toml and CITATION.cff'
+  
+  validation-status:
+    description: 'Status of CITATION.cff validation (valid/invalid/error)'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r ${{ github.action_path }}/src/requirements.txt
+    
+    - name: Sync CITATION.cff
+      shell: bash
+      env:
+        PYPROJECT_PATH: ${{ inputs.pyproject-path }}
+        CITATION_PATH: ${{ inputs.citation-path }}
+        COMMIT: ${{ inputs.commit }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        CUSTOM_FIELDS: ${{ inputs.custom-fields }}
+        VALIDATE_ONLY: ${{ inputs.validate-only }}
+        FORCE_UPDATE: ${{ inputs.force-update }}
+        GITHUB_OUTPUT: ${{ runner.temp }}/citation-sync-output
+      run: |
+        python ${{ github.action_path }}/src/sync_citation.py
+    
+    - name: Commit changes
+      if: inputs.commit == 'true' && env.CITATION_UPDATED == 'true'
+      shell: bash
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add ${{ inputs.citation-path }}
+        git commit -m "${{ inputs.commit-message }}"

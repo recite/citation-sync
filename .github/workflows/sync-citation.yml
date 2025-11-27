@@ -1,0 +1,31 @@
+name: Sync CITATION.cff
+on:
+  push:
+    branches: [main]
+    paths: ['pyproject.toml']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-citation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Self-test citation sync
+        uses: ./
+        with:
+          commit: true
+          commit-message: "docs: update CITATION.cff from pyproject.toml [skip ci]"
+          custom-fields: |
+            {
+              "repository-code": "${{ github.server_url }}/${{ github.repository }}",
+              "type": "software"
+            }

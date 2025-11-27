@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: citation-sync
+authors:
+- given-names: Citation Sync
+  family-names: Contributors
+  email: contributors@citation-sync.dev
+version: 1.0.0
+date-released: '2025-11-26'
+abstract: GitHub Action for synchronizing CITATION.cff with pyproject.toml metadata
+keywords:
+- github-actions
+- citation
+- cff
+- pyproject-toml
+- pep-621
+- metadata
+- automation
+- python
+license: MIT
+url: https://github.com/soodoku/citation-sync

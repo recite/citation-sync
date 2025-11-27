@@ -1,0 +1,50 @@
+name: Manual Citation Sync
+on:
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update even if no changes detected'
+        required: false
+        default: false
+        type: boolean
+      custom_doi:
+        description: 'Custom DOI to include'
+        required: false
+        default: ''
+        type: string
+      commit_changes:
+        description: 'Commit changes to repository'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  sync-citation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Prepare custom fields
+        id: custom-fields
+        run: |
+          CUSTOM_FIELDS='{"repository-code": "${{ github.server_url }}/${{ github.repository }}", "type": "software"}'
+          
+          if [ -n "${{ github.event.inputs.custom_doi }}" ]; then
+            CUSTOM_FIELDS=$(echo $CUSTOM_FIELDS | jq --arg doi "${{ github.event.inputs.custom_doi }}" '. + {doi: $doi}')
+          fi
+          
+          echo "fields=$CUSTOM_FIELDS" >> $GITHUB_OUTPUT
+      
+      - name: Sync CITATION.cff
+        uses: your-username/citation-sync@v1
+        with:
+          commit: ${{ github.event.inputs.commit_changes }}
+          force-update: ${{ github.event.inputs.force_update }}
+          commit-message: "docs: manually update CITATION.cff from pyproject.toml"
+          custom-fields: ${{ steps.custom-fields.outputs.fields }}
