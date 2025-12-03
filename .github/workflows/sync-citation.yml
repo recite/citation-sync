@@ -26,7 +26,7 @@ jobs:
           commit-message: "docs: update CITATION.cff from pyproject.toml [skip ci]"
           custom-fields: |
             {
-              "repository-code": "${{ github.server_url }}/${{ github.repository }}",
+              "repository-code": "https://github.com/recite/citation-sync",
               "type": "software",
               "date-released": "${{ github.event.release.published_at || github.event.head_commit.timestamp }}"
             }

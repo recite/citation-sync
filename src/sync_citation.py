@@ -13,10 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+import tomllib
 
 import jsonschema
 import yaml

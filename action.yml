@@ -1,6 +1,6 @@
 name: 'Sync CITATION.cff with pyproject.toml'
 description: 'Automatically synchronize CITATION.cff file with PEP 621 metadata from pyproject.toml'
-author: 'citation-sync'
+author: 'Gaurav Sood'
 
 branding:
   icon: 'file-text'
@@ -42,6 +42,16 @@ inputs:
     required: false
     default: 'false'
 
+  updatable-fields:
+    description: 'Comma-separated list of CFF fields that can be updated from pyproject.toml (e.g., "title,version,authors"). Defaults to all mappable fields.'
+    required: false
+    default: ''
+
+  exclude-fields:
+    description: 'Comma-separated list of CFF fields to exclude from updates (e.g., "date-released,message"). Takes precedence over updatable-fields.'
+    required: false
+    default: ''
+
 outputs:
   updated:
     description: 'Whether CITATION.cff was updated (true/false)'
@@ -77,6 +87,8 @@ runs:
         CUSTOM_FIELDS: ${{ inputs.custom-fields }}
         VALIDATE_ONLY: ${{ inputs.validate-only }}
         FORCE_UPDATE: ${{ inputs.force-update }}
+        UPDATABLE_FIELDS: ${{ inputs.updatable-fields }}
+        EXCLUDE_FIELDS: ${{ inputs.exclude-fields }}
         GITHUB_OUTPUT: ${{ runner.temp }}/citation-sync-output
       run: |
         cd ${{ github.action_path }}

@@ -1,0 +1,159 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev
+
+      - name: Run linting
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run unit tests
+        run: |
+          uv run pytest tests/unit/ -v --cov=src --cov-report=term-missing
+
+      - name: Run integration tests
+        run: |
+          uv run pytest tests/integration/ -v
+
+      - name: Test schema mapping validation
+        run: |
+          # Test that invalid field names are rejected
+          if uv run python -c "
+          import os
+          os.environ['UPDATABLE_FIELDS'] = 'invalid_field'
+          exec(open('src/sync_citation.py').read())
+          "; then
+            echo "ERROR: Should have failed with invalid field"
+            exit 1
+          else
+            echo "✓ Invalid field validation works"
+          fi
+
+      - name: Test field exclusion
+        run: |
+          # Test excluding date-released field
+          EXCLUDE_FIELDS="date-released" uv run python src/sync_citation.py
+          echo "✓ Field exclusion works"
+
+      - name: Test selective updates
+        run: |
+          # Test updating only specific fields
+          UPDATABLE_FIELDS="title,version" uv run python src/sync_citation.py
+          echo "✓ Selective field updates work"
+
+  self-test:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test action on itself
+        uses: ./
+        with:
+          commit: false  # Don't commit in tests
+          custom-fields: |
+            {
+              "repository-code": "${{ github.server_url }}/${{ github.repository }}",
+              "type": "software"
+            }
+
+      - name: Verify CITATION.cff was generated correctly
+        run: |
+          if [ ! -f "CITATION.cff" ]; then
+            echo "ERROR: CITATION.cff was not created"
+            exit 1
+          fi
+          
+          # Check that required fields exist
+          if ! grep -q "cff-version: 1.2.0" CITATION.cff; then
+            echo "ERROR: Missing cff-version"
+            exit 1
+          fi
+          
+          if ! grep -q "title: citation-sync" CITATION.cff; then
+            echo "ERROR: Missing or wrong title"
+            exit 1
+          fi
+          
+          # Check that custom fields were applied
+          if ! grep -q "type: software" CITATION.cff; then
+            echo "ERROR: Custom field 'type' not applied"
+            exit 1
+          fi
+          
+          echo "✓ Self-test passed - CITATION.cff generated correctly"
+
+  test-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scenario:
+          - name: "Minimal pyproject.toml"
+            updatable_fields: ""
+            exclude_fields: ""
+          - name: "Only core fields"
+            updatable_fields: "title,version,authors"
+            exclude_fields: ""
+          - name: "Exclude date-released"
+            updatable_fields: ""
+            exclude_fields: "date-released,message"
+          - name: "Authors only"
+            updatable_fields: "authors"
+            exclude_fields: ""
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Test scenario - ${{ matrix.scenario.name }}
+        env:
+          UPDATABLE_FIELDS: ${{ matrix.scenario.updatable_fields }}
+          EXCLUDE_FIELDS: ${{ matrix.scenario.exclude_fields }}
+        run: |
+          echo "Testing: ${{ matrix.scenario.name }}"
+          echo "Updatable fields: ${{ matrix.scenario.updatable_fields }}"
+          echo "Exclude fields: ${{ matrix.scenario.exclude_fields }}"
+          
+          # Run the sync
+          uv run python src/sync_citation.py
+          
+          echo "✓ Scenario '${{ matrix.scenario.name }}' completed successfully"

@@ -1,0 +1,29 @@
+[project]
+name = "sample-project"
+version = "1.2.3"
+description = "A sample Python project for testing citation sync"
+authors = [
+    {name = "Jane Smith", email = "jane@example.com", orcid = "https://orcid.org/0000-0000-0000-0001"},
+    {name = "John Doe", email = "john@example.com"}
+]
+maintainers = [
+    {name = "Maintainer One", email = "maintainer@example.com"}
+]
+keywords = ["python", "citation", "metadata", "testing"]
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "PyYAML>=6.0",
+    "jsonschema>=4.17.0"
+]
+
+[project.urls]
+Homepage = "https://sample-project.example.com"
+Documentation = "https://docs.sample-project.example.com" 
+Repository = "https://github.com/example/sample-project"
+"Bug Reports" = "https://github.com/example/sample-project/issues"
+Download = "https://pypi.org/project/sample-project/"
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+docs = ["sphinx"]

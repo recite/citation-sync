@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: sample-project
+authors:
+- given-names: Jane
+  family-names: Smith
+  email: jane@example.com
+  orcid: https://orcid.org/0000-0000-0000-0001
+- given-names: John
+  family-names: Doe
+  email: john@example.com
+version: 1.2.3
+date-released: '2025-12-03'
+abstract: A sample Python project for testing citation sync
+keywords:
+- python
+- citation
+- metadata
+- testing
+license: MIT
+url: https://sample-project.example.com
+repository-code: https://github.com/example/sample-project
+repository-artifact: https://pypi.org/project/sample-project/
+# Protected fields that should be preserved
+doi: 10.1234/sample.doi
+preferred-citation:
+  type: article
+  title: "Sample Project: A Tool for Testing"
+  authors:
+    - given-names: Jane
+      family-names: Smith
+  journal: Journal of Open Source Software
+  year: 2025
+references:
+  - type: software
+    title: "PyYAML"
+    authors:
+      - name: "PyYAML Team"
+    url: "https://pyyaml.org"
