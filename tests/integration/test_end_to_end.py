@@ -1,11 +1,10 @@
 """Integration tests for end-to-end workflows."""
 
-import os
 import tempfile
-import yaml
-import tomllib
 from pathlib import Path
+
 import pytest
+import yaml
 
 from src.sync_citation import CitationSyncer
 
@@ -22,11 +21,10 @@ class TestEndToEndWorkflow:
     def create_pyproject_toml(self, temp_dir: Path, config: dict):
         """Helper to create pyproject.toml file."""
         pyproject_path = temp_dir / "pyproject.toml"
-        content = {
-            "project": config
-        }
+        content = {"project": config}
         with open(pyproject_path, "wb") as f:
             import tomli_w
+
             tomli_w.dump(content, f)
         return pyproject_path
 
@@ -49,15 +47,13 @@ class TestEndToEndWorkflow:
             "name": "test-project",
             "version": "1.0.0",
             "description": "A test project for citation sync",
-            "authors": [
-                {"name": "Jane Smith", "email": "jane@example.com"}
-            ],
+            "authors": [{"name": "Jane Smith", "email": "jane@example.com"}],
             "keywords": ["test", "citation", "python"],
             "license": {"text": "MIT"},
             "urls": {
                 "Homepage": "https://example.com",
-                "Repository": "https://github.com/user/test-project"
-            }
+                "Repository": "https://github.com/user/test-project",
+            },
         }
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
         citation_path = temp_dir / "CITATION.cff"
@@ -77,11 +73,19 @@ class TestEndToEndWorkflow:
         assert citation_data["title"] == "test-project"
         assert citation_data["version"] == "1.0.0"
         assert citation_data["abstract"] == "A test project for citation sync"
-        assert citation_data["authors"] == [{"given-names": "Jane", "family-names": "Smith", "email": "jane@example.com"}]
+        assert citation_data["authors"] == [
+            {
+                "given-names": "Jane",
+                "family-names": "Smith",
+                "email": "jane@example.com",
+            }
+        ]
         assert citation_data["keywords"] == ["test", "citation", "python"]
         assert citation_data["license"] == "MIT"
         assert citation_data["url"] == "https://example.com"
-        assert citation_data["repository-code"] == "https://github.com/user/test-project"
+        assert (
+            citation_data["repository-code"] == "https://github.com/user/test-project"
+        )
 
     def test_sync_with_existing_protected_fields(self, temp_dir):
         """Test syncing preserves protected fields in existing CITATION.cff."""
@@ -89,7 +93,7 @@ class TestEndToEndWorkflow:
         pyproject_config = {
             "name": "test-project",
             "version": "2.0.0",
-            "description": "Updated description"
+            "description": "Updated description",
         }
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
 
@@ -104,8 +108,8 @@ class TestEndToEndWorkflow:
             "preferred-citation": {
                 "type": "article",
                 "title": "My Research Paper",
-                "authors": [{"name": "Jane Smith"}]
-            }
+                "authors": [{"name": "Jane Smith"}],
+            },
         }
         citation_path = self.create_citation_cff(temp_dir, existing_citation)
 
@@ -134,7 +138,7 @@ class TestEndToEndWorkflow:
             "name": "test-project",
             "version": "2.0.0",
             "description": "Updated description",
-            "keywords": ["new", "keywords"]
+            "keywords": ["new", "keywords"],
         }
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
 
@@ -146,15 +150,15 @@ class TestEndToEndWorkflow:
             "version": "1.0.0",
             "abstract": "Old description",
             "keywords": ["old", "keywords"],
-            "authors": [{"name": "Unknown"}]
+            "authors": [{"name": "Unknown"}],
         }
         citation_path = self.create_citation_cff(temp_dir, existing_citation)
 
         # Run sync with only title and version updatable
         syncer = CitationSyncer(
-            str(pyproject_path), 
+            str(pyproject_path),
             str(citation_path),
-            updatable_fields=["title", "version"]
+            updatable_fields=["title", "version"],
         )
         result = syncer.sync()
 
@@ -176,7 +180,7 @@ class TestEndToEndWorkflow:
         pyproject_config = {
             "name": "test-project",
             "version": "2.0.0",
-            "description": "New description"
+            "description": "New description",
         }
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
 
@@ -186,15 +190,13 @@ class TestEndToEndWorkflow:
             "message": "Custom message - do not update",
             "title": "old-project",
             "version": "1.0.0",
-            "authors": [{"name": "Unknown"}]
+            "authors": [{"name": "Unknown"}],
         }
         citation_path = self.create_citation_cff(temp_dir, existing_citation)
 
         # Run sync excluding message field
         syncer = CitationSyncer(
-            str(pyproject_path), 
-            str(citation_path),
-            exclude_fields=["message"]
+            str(pyproject_path), str(citation_path), exclude_fields=["message"]
         )
         result = syncer.sync()
 
@@ -213,20 +215,17 @@ class TestEndToEndWorkflow:
     def test_custom_fields_override(self, temp_dir):
         """Test that custom fields take highest priority."""
         # Create pyproject.toml
-        pyproject_config = {
-            "name": "test-project",
-            "version": "1.0.0"
-        }
+        pyproject_config = {"name": "test-project", "version": "1.0.0"}
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
         citation_path = temp_dir / "CITATION.cff"
 
         # Run sync with custom fields
         custom_fields = {
             "title": "Custom Title Override",  # Should override pyproject name
-            "doi": "10.1234/custom.doi",      # Should add new field
-            "type": "dataset"                 # Should add new field
+            "doi": "10.1234/custom.doi",  # Should add new field
+            "type": "dataset",  # Should add new field
         }
-        
+
         syncer = CitationSyncer(str(pyproject_path), str(citation_path))
         result = syncer.sync(custom_fields=custom_fields)
 
@@ -245,10 +244,7 @@ class TestEndToEndWorkflow:
     def test_no_changes_detected(self, temp_dir):
         """Test when no changes are detected."""
         # Create pyproject.toml
-        pyproject_config = {
-            "name": "test-project",
-            "version": "1.0.0"
-        }
+        pyproject_config = {"name": "test-project", "version": "1.0.0"}
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
 
         # Create matching CITATION.cff
@@ -257,7 +253,7 @@ class TestEndToEndWorkflow:
             "message": "If you use this software, please cite it as below.",
             "title": "test-project",
             "version": "1.0.0",
-            "authors": [{"name": "Unknown"}]
+            "authors": [{"name": "Unknown"}],
         }
         citation_path = self.create_citation_cff(temp_dir, existing_citation)
 
@@ -280,16 +276,16 @@ class TestEndToEndWorkflow:
             "maintainers": [{"name": "Maintainer"}],
             "license": "GPL-3.0",  # Lower priority
             "urls": {
-                "Homepage": "https://homepage.com",     # Should win for url
-                "Documentation": "https://docs.com",    # Lower priority for url
-                "Repository": "https://repo.com",       # Should win for repository-code
-                "Source": "https://source.com"          # Lower priority for repository-code
-            }
+                "Homepage": "https://homepage.com",  # Should win for url
+                "Documentation": "https://docs.com",  # Lower priority for url
+                "Repository": "https://repo.com",  # Should win for repository-code
+                "Source": "https://source.com",  # Lower priority for repository-code
+            },
         }
-        
+
         # Add license.text to project config (higher priority)
         pyproject_config["license"] = {"text": "MIT"}  # Should override string license
-        
+
         pyproject_path = self.create_pyproject_toml(temp_dir, pyproject_config)
         citation_path = temp_dir / "CITATION.cff"
 
@@ -303,7 +299,9 @@ class TestEndToEndWorkflow:
         # Check conflict resolution
         citation_data = self.read_citation_cff(citation_path)
         # Authors should use authors, not maintainers
-        assert citation_data["authors"] == [{"given-names": "Primary", "family-names": "Author"}]
+        assert citation_data["authors"] == [
+            {"given-names": "Primary", "family-names": "Author"}
+        ]
         # License should use license.text, not license string
         assert citation_data["license"] == "MIT"
         # URLs should use higher priority options

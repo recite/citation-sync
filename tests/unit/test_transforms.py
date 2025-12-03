@@ -1,6 +1,7 @@
 """Unit tests for transform functions."""
 
 import pytest
+
 from src.sync_citation import CitationSyncer
 
 
@@ -16,23 +17,27 @@ class TestTransformFunctions:
         """Test parsing authors with full names."""
         authors = [
             {"name": "Jane Smith", "email": "jane@example.com"},
-            {"name": "John Doe", "email": "john@example.com", "orcid": "0000-0000-0000-0000"}
+            {
+                "name": "John Doe",
+                "email": "john@example.com",
+                "orcid": "0000-0000-0000-0000",
+            },
         ]
-        
+
         result = syncer.parse_authors(authors)
-        
+
         expected = [
             {
                 "given-names": "Jane",
-                "family-names": "Smith", 
-                "email": "jane@example.com"
+                "family-names": "Smith",
+                "email": "jane@example.com",
             },
             {
                 "given-names": "John",
                 "family-names": "Doe",
                 "email": "john@example.com",
-                "orcid": "0000-0000-0000-0000"
-            }
+                "orcid": "0000-0000-0000-0000",
+            },
         ]
         assert result == expected
 
@@ -54,11 +59,13 @@ class TestTransformFunctions:
         """Test parsing authors with affiliation."""
         authors = [{"name": "Jane Smith", "affiliation": "University of Example"}]
         result = syncer.parse_authors(authors)
-        expected = [{
-            "given-names": "Jane",
-            "family-names": "Smith",
-            "affiliation": "University of Example"
-        }]
+        expected = [
+            {
+                "given-names": "Jane",
+                "family-names": "Smith",
+                "affiliation": "University of Example",
+            }
+        ]
         assert result == expected
 
     def test_parse_authors_string_input(self, syncer):
@@ -90,7 +97,7 @@ class TestTransformFunctions:
         """Test _apply_transform for parse_license_string."""
         result = syncer._apply_transform("parse_license_string", "MIT")
         assert result == "MIT"
-        
+
         # Test with non-string input
         result = syncer._apply_transform("parse_license_string", {"text": "MIT"})
         assert result == "{'text': 'MIT'}"
@@ -104,23 +111,26 @@ class TestTransformFunctions:
         """Test _ensure_required_fields with empty citation data."""
         citation_data = {}
         syncer._ensure_required_fields(citation_data)
-        
+
         assert citation_data["cff-version"] == "1.2.0"
-        assert citation_data["message"] == "If you use this software, please cite it as below."
+        assert (
+            citation_data["message"]
+            == "If you use this software, please cite it as below."
+        )
         assert citation_data["title"] == "Unknown"
         assert citation_data["authors"] == [{"name": "Unknown"}]
 
     def test_ensure_required_fields_partial_citation(self, syncer):
         """Test _ensure_required_fields with partial citation data."""
-        citation_data = {
-            "title": "My Project",
-            "authors": [{"name": "Jane Smith"}]
-        }
+        citation_data = {"title": "My Project", "authors": [{"name": "Jane Smith"}]}
         syncer._ensure_required_fields(citation_data)
-        
+
         # Should add missing required fields
         assert citation_data["cff-version"] == "1.2.0"
-        assert citation_data["message"] == "If you use this software, please cite it as below."
+        assert (
+            citation_data["message"]
+            == "If you use this software, please cite it as below."
+        )
         # Should preserve existing fields
         assert citation_data["title"] == "My Project"
         assert citation_data["authors"] == [{"name": "Jane Smith"}]
@@ -131,10 +141,10 @@ class TestTransformFunctions:
             "cff-version": "1.2.0",
             "message": "Custom message",
             "title": "My Project",
-            "authors": [{"name": "Jane Smith"}]
+            "authors": [{"name": "Jane Smith"}],
         }
         original = citation_data.copy()
         syncer._ensure_required_fields(citation_data)
-        
+
         # Should not modify existing complete data
         assert citation_data == original

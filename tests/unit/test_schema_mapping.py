@@ -1,6 +1,7 @@
 """Unit tests for schema mapping functionality."""
 
 import pytest
+
 from src.sync_citation import CitationSyncer, CitationSyncError
 
 
@@ -59,9 +60,10 @@ class TestSchemaMappingValidation:
         updatable = ["title", "version", "abstract", "authors"]
         exclude = ["abstract"]
         syncer = CitationSyncer(
-            "pyproject.toml", "citation.cff", 
-            updatable_fields=updatable, 
-            exclude_fields=exclude
+            "pyproject.toml",
+            "citation.cff",
+            updatable_fields=updatable,
+            exclude_fields=exclude,
         )
         expected = set(updatable) - set(exclude)
         assert syncer.fields_to_update == expected
@@ -69,8 +71,7 @@ class TestSchemaMappingValidation:
     def test_should_update_field(self):
         """Test the should_update_field method."""
         syncer = CitationSyncer(
-            "pyproject.toml", "citation.cff", 
-            updatable_fields=["title", "version"]
+            "pyproject.toml", "citation.cff", updatable_fields=["title", "version"]
         )
         assert syncer.should_update_field("title") is True
         assert syncer.should_update_field("version") is True
@@ -80,12 +81,22 @@ class TestSchemaMappingValidation:
     def test_default_updatable_fields(self):
         """Test that default updatable fields include all mapped fields."""
         syncer = CitationSyncer("pyproject.toml", "citation.cff")
-        
+
         # Should include all CFF fields that can be mapped from pyproject.toml
         expected_fields = {
-            "title", "version", "abstract", "authors", "keywords", 
-            "license", "license-url", "url", "repository-code", "repository-artifact",
+            "title",
+            "version",
+            "abstract",
+            "authors",
+            "keywords",
+            "license",
+            "license-url",
+            "url",
+            "repository-code",
+            "repository-artifact",
             # Plus computed fields
-            "cff-version", "message", "date-released"
+            "cff-version",
+            "message",
+            "date-released",
         }
         assert syncer.updatable_fields == expected_fields
