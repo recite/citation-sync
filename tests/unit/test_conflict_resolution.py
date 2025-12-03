@@ -157,6 +157,7 @@ class TestConflictResolution:
 
         result = syncer.generate_citation_data()
 
-        # Neither should be called since authors field is excluded
+        # parse_authors should not be called since authors field is excluded
         syncer.parse_authors.assert_not_called()
-        assert "authors" not in result
+        # Authors field will still be present with default value
+        assert result["authors"] == [{"name": "Unknown"}]

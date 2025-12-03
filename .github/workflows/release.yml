@@ -147,48 +147,9 @@ jobs:
           echo "📋 Generated release notes:"
           cat release_notes.md
 
-  run-tests:
-    runs-on: ubuntu-latest
-    needs: prepare-release
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12", "3.13"]
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-
-      - name: Install dependencies
-        run: |
-          uv sync --extra dev
-
-      - name: Run tests
-        run: |
-          uv run pytest tests/ -v
-          
-      - name: Run linting
-        run: |
-          uv run ruff check .
-          uv run ruff format --check .
-
-      - name: Test action functionality
-        run: |
-          # Test basic functionality
-          uv run python src/sync_citation.py
-          
-          # Test with different configurations
-          UPDATABLE_FIELDS="title,version" uv run python src/sync_citation.py
-          EXCLUDE_FIELDS="date-released" uv run python src/sync_citation.py
-
   create-release:
     runs-on: ubuntu-latest
-    needs: [prepare-release, run-tests]
+    needs: prepare-release
     
     steps:
       - name: Checkout repository

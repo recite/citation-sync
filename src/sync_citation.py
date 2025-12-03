@@ -234,15 +234,19 @@ class CitationSyncer:
         if not self.pyproject_data:
             raise CitationSyncError("pyproject.toml data not loaded")
 
-        project_data = self.pyproject_data.get("project", {})
-
-        if not project_data:
+        if "project" not in self.pyproject_data:
             raise CitationSyncError("No [project] section found in pyproject.toml")
 
+        project_data = self.pyproject_data["project"]
+
+        # Empty project section is okay, we'll use defaults
         return project_data
 
     def parse_authors(self, authors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Parse authors from PEP 621 format to CFF format."""
+        if not authors:  # Handle empty list
+            return []
+
         cff_authors = []
 
         for author in authors:
@@ -291,10 +295,13 @@ class CitationSyncer:
         return cff_field in self.fields_to_update
 
     def generate_citation_data(
-        self, custom_fields: Optional[Dict[str, Any]] = None
+        self,
+        custom_fields: Optional[Dict[str, Any]] = None,
+        project_metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Generate CITATION.cff data from pyproject.toml using schema mapping."""
-        project_metadata = self.extract_project_metadata()
+        if project_metadata is None:
+            project_metadata = self.extract_project_metadata()
         custom_fields = custom_fields or {}
 
         # Start with existing citation data to preserve non-updatable fields
@@ -333,6 +340,14 @@ class CitationSyncer:
             # Apply transformation
             if transform:
                 value = self._apply_transform(transform, value)
+
+            # Check if the updateable field has empty/invalid data
+            if isinstance(value, list) and not value:
+                print(
+                    f"Warning: No data found for updateable field '{cff_field}' "
+                    "in pyproject.toml"
+                )
+                continue
 
             citation_data[cff_field] = value
 
@@ -383,6 +398,7 @@ class CitationSyncer:
     def _ensure_required_fields(self, citation_data: Dict[str, Any]) -> None:
         """Ensure minimum required CFF fields exist."""
         # CFF requires: cff-version, message, title, authors
+        # These are always required regardless of field exclusions
         if "cff-version" not in citation_data:
             citation_data["cff-version"] = "1.2.0"
 
@@ -454,15 +470,16 @@ class CitationSyncer:
             "validation_status": "unknown",
         }
 
+        # Load configuration (critical errors bubble up)
+        self.load_pyproject()
+        existing_citation = self.load_citation()
+
+        # Extract project metadata (critical errors bubble up)
+        project_metadata = self.extract_project_metadata()
+
         try:
-            # Load pyproject.toml
-            self.load_pyproject()
-
-            # Load existing CITATION.cff if it exists
-            existing_citation = self.load_citation()
-
-            # Generate new citation data
-            new_citation = self.generate_citation_data(custom_fields)
+            # Generate new citation data (data processing errors caught here)
+            new_citation = self.generate_citation_data(custom_fields, project_metadata)
 
             # Validate the generated citation
             if self.validate_citation(new_citation):
