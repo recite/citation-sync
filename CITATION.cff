@@ -4,7 +4,6 @@ title: citation-sync
 authors:
 - given-names: Gaurav
   family-names: Sood
-  email: gsood07@gmail.com
 version: 0.3.0
 date-released: '2025-12-02'
 abstract: A GitHub Action that automatically synchronizes Citation File Format (CFF)
