@@ -6,7 +6,7 @@ name = "citation-sync"
 version = "0.3.0"
 description = "A GitHub Action that automatically synchronizes Citation File Format (CFF) files with PEP 621 metadata from pyproject.toml"
 authors = [
-    {name = "Gaurav Sood", email = "gsood07@gmail.com"}
+    {name = "Gaurav Sood"}
 ]
 requires-python = ">=3.11"
 keywords = ["github-action", "citation", "cff", "metadata", "academic"]
